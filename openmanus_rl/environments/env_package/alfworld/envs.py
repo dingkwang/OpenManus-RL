@@ -7,7 +7,7 @@ import torch
 import torchvision.transforms as T
 import ray
 
-from agent_system.environments.env_package.alfworld.alfworld.agents.environment import get_environment
+from openmanus_rl.environments.env_package.alfworld.alfworld.agents.environment import get_environment
 
 ALF_ACTION_LIST=["pass", "goto", "pick", "put", "open", "close", "toggle", "heat", "clean", "cool", "slice", "inventory", "examine", "look"]
 # ALF_ITEM_LIST =

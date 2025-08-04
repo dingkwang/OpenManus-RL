@@ -4,9 +4,9 @@ import torch
 import numpy as np
 from functools import partial
 import os
-from agent_system.environments.prompts import *
-from agent_system.environments.base import EnvironmentManagerBase, to_numpy
-from agent_system.memory import SimpleMemory
+from openmanus_rl.environments.prompts import *
+from openmanus_rl.environments.base import EnvironmentManagerBase, to_numpy
+from openmanus_rl.memory import SimpleMemory
 
 def parse_gamefile(infos):
     gamefile = []
@@ -283,7 +283,7 @@ def make_envs(config):
     group_n = config.env.rollout.n if config.env.rollout.n > 0 else 1
 
     if "alfworld" in config.env.env_name.lower():
-        from agent_system.environments.env_package.alfworld import build_alfworld_envs, alfworld_projection
+        from openmanus_rl.environments.env_package.alfworld import build_alfworld_envs, alfworld_projection
         if config.env.env_name == 'alfworld/AlfredThorEnv':
             alf_config_path = os.path.join(os.path.dirname(__file__), 'env_package/alfworld/configs/config_tw.yaml')
         elif config.env.env_name == 'alfworld/AlfredTWEnv':
@@ -303,7 +303,7 @@ def make_envs(config):
         return envs, val_envs
 
     elif "webshop" in config.env.env_name.lower():
-        from agent_system.environments.env_package.webshop import build_webshop_envs, webshop_projection
+        from openmanus_rl.environments.env_package.webshop import build_webshop_envs, webshop_projection
         if config.env.webshop.use_small:
             file_path = os.path.join(os.path.dirname(__file__), 'env_package/webshop/webshop/data/items_shuffle_1000.json')
             attr_path = os.path.join(os.path.dirname(__file__), 'env_package/webshop/webshop/data/items_ins_v2_1000.json')

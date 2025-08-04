@@ -7,8 +7,8 @@ import verl.utils.torch_functional as verl_F
 from transformers import PreTrainedTokenizer
 import uuid
 from verl.models.transformers.qwen2_vl import get_rope_index
-from agent_system.multi_turn_rollout.utils import process_image, to_list_of_dict, torch_to_numpy, filter_group_data
-from agent_system.environments import EnvironmentManagerBase
+from openmanus_rl.multi_turn_rollout.utils import process_image, to_list_of_dict, torch_to_numpy, filter_group_data
+from openmanus_rl.environments import EnvironmentManagerBase
 from typing import List, Dict
 
 class TrajectoryCollector:
