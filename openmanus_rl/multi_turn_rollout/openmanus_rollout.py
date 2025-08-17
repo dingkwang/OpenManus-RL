@@ -13,7 +13,7 @@ from openmanus_rl.multi_turn_rollout.rollout_loop import TrajectoryCollector
 from openmanus_rl.multi_turn_rollout.modular_stages import ModularStageProcessor, DEFAULT_TOOLS
 
 
-class FinalRollout(TrajectoryCollector):
+class OpenmanusRollout(TrajectoryCollector):
     """
     Staged rollout that extends TrajectoryCollector for VERL compatibility.
     Supports: 
