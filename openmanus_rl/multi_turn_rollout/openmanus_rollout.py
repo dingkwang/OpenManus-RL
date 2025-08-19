@@ -190,18 +190,19 @@ class OpenmanusRollout(TrajectoryCollector):
         obs, infos = envs.reset()
         
         # Handle batch size adjustment (VERL compatibility)
-        batch_size = len(gen_batch.batch['input_ids'])
+        batch_size = len(gen_batch)
         length_obs = len(obs['text']) if obs.get('text') is not None else len(obs.get('image', []))
         
         if batch_size != length_obs and self.config.env.rollout.n > 0:
             gen_batch = gen_batch.repeat(repeat_times=self.config.env.rollout.n, interleave=True)
-            batch_size = len(gen_batch.batch['input_ids'])
+            batch_size = len(gen_batch)
         
         # Initialize storage
         trajectories = []
         episode_rewards = np.zeros(batch_size)
         episode_lengths = np.zeros(batch_size, dtype=int)
         is_done = np.zeros(batch_size, dtype=bool)
+        trajectory_uids = [f"traj_{i}" for i in range(batch_size)]  # Consistent UIDs
         
         # Main rollout loop
         for step in range(self.config.env.max_steps):
@@ -270,6 +271,7 @@ class OpenmanusRollout(TrajectoryCollector):
             batch.non_tensor_batch['rewards'] = rewards
             batch.non_tensor_batch['active_masks'] = active_masks
             batch.non_tensor_batch['parsed_responses'] = parsed_responses
+            batch.non_tensor_batch['traj_uid'] = trajectory_uids
             
             batch = batch.union(batch_output)
             trajectories.append(batch)
