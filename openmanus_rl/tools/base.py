@@ -1,4 +1,6 @@
-# octotools/tools/base.pyclass BaseTool:
+# octotools/tools/base.py
+
+class BaseTool:
     """
     A base class for building tool classes that perform specific tasks, such as image processing or text detection.
     """
