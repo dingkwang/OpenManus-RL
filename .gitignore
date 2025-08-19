@@ -32,3 +32,5 @@ logs/
 verl_checkpoints
 verl_checkpoints/
 verl.egg-info/
+
+test_memory.md
