@@ -206,6 +206,14 @@ class ModularStageProcessor:
         """Register tool in action module."""
         self.action.register_tool(name, func)
     
+    def query_memory(self, query: str, top_k: int = 3) -> str:
+        """Query memory - delegate to memory module."""
+        return self.memory.query(query, top_k)
+    
+    def store_memory(self, content: str, episode: str = "", step: int = 0):
+        """Store memory - delegate to memory module."""
+        self.memory.store_to_file(content, episode, step)
+    
     def process_response(self, text: str, episode: str = "", step: int = 0) -> Dict[str, Any]:
         """Process all stages in sequence."""
         results = {

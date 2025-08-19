@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from verl import DataProto
 from verl.utils.dataset.rl_dataset import collate_fn
 from openmanus_rl.multi_turn_rollout.rollout_loop import TrajectoryCollector
-from openmanus_rl.multi_turn_rollout.modular_stages import ModularStageProcessor, DEFAULT_TOOLS
+from openmanus_rl.multi_turn_rollout.modular_stages import ModularStageProcessor
 
 
 class OpenmanusRollout(TrajectoryCollector):
@@ -117,33 +117,12 @@ class OpenmanusRollout(TrajectoryCollector):
         return result
     
     def query_memory(self, query: str, top_k: int = 3) -> str:
-        """Simple memory search."""
-        if not query or not self.memories:
-            return "No memories"
-        
-        results = []
-        query_lower = query.lower()
-        for mem in reversed(self.memories):
-            if query_lower in mem.lower():
-                results.append(mem)
-                if len(results) >= top_k:
-                    break
-        
-        return "\n".join(results) if results else "No matches"
+        """Simple memory search - delegate to stage processor."""
+        return self.stage_processor.query_memory(query, top_k)
     
     def store_memory(self, content: str, episode: str = "", step: int = 0):
-        """Store memory to file and RAM."""
-        if not content:
-            return
-        
-        # Append to file
-        with open(self.memory_file, 'a') as f:
-            f.write(f"\n[E:{episode}|S:{step}] {content}\n")
-        
-        # Keep in RAM
-        self.memories.append(content)
-        if len(self.memories) > 100:
-            self.memories.pop(0)
+        """Store memory to file and RAM - delegate to stage processor."""
+        self.stage_processor.store_memory(content, episode, step)
     
     def execute_tool(self, action: str) -> Tuple[str, Optional[str]]:
         """
@@ -167,8 +146,8 @@ class OpenmanusRollout(TrajectoryCollector):
                     except:
                         params = {'query': line.split(':', 1)[1].strip()}
             
-            if tool_name and tool_name in self.tools:
-                result = self.tools[tool_name](params)
+            if tool_name and tool_name in self.stage_processor.action.tools:
+                result = self.stage_processor.action.tools[tool_name](params)
                 return "", result  # Empty action for env, return tool result
         
         return action, None
