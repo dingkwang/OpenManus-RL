@@ -26,23 +26,26 @@ Prior to this step, you have already taken {step_count} step(s). Below are the m
 You are now at step {current_step} and your current observation is: {current_observation}
 Your admissible actions of the current situation are: [{admissible_actions}].
 
-Now it's your turn to take an action.
+Now it's your turn to take an action. Please output your response using the following separated XML tags:
 
-Your thinking process MUST be enclosed within <think> </think> tags and follow this structure:
-
+First, analyze the current situation and plan:
 <think>
-plan
 Analyze the current situation and devise a plan to accomplish the task: {task_description}
 What are the key steps needed to complete this task?
+Based on the current observation, what should be our immediate next step?
+How does this action advance our plan toward completing the task?
+</think>
 
+Then, if this is not the first step (step_count > 0), reflect on the last action:
 <reflection>
-[Only needed when step_count > 0]
 Last observation analysis: Have we made progress toward solving the task?
 What did the last action accomplish? Was it successful or did it encounter any issues?
 Are we closer to completing the task?
 </reflection>
 
-<memory analysis>
+Next, analyze your memory and past experiences:
+
+<memory_analysis>
 RAG-style retrieval from history:
 
 [Thinking history - cite specific past reasoning from previous steps]
@@ -57,14 +60,9 @@ Example: "Step 6 failed with 'Nothing happens' when trying to take knife from dr
 [Milestone tracking]
 - Completed: Found target object at step X, Successfully picked up item at step Y
 - Current state: Holding [items], Located at [location]
-</memory analysis>
+</memory_analysis>
 
-Future plan and next action decision:
-- Immediate next step: What specific action should we take now?
-- How does this action advance our plan toward completing the task?
-</think>
-
-Once you've finished your reasoning, present your chosen action within <action> </action> tags in this format:
+Finally, present your chosen action:
 
 <action>
 action_choice: [selected admissible action from the list]

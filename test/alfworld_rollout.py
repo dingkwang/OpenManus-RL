@@ -289,6 +289,11 @@ class TrajectoryCollector:
             )
             step.parsed_action = action or "look"
             
+            # Validate action before execution
+            if step.admissible_actions and step.parsed_action not in step.admissible_actions:
+                logger.warning(f"Invalid action '{step.parsed_action}', using 'look' instead")
+                step.parsed_action = "look"
+            
             # Execute in environment
             next_obs, rewards, dones, infos = env.step([step.parsed_action])
             
@@ -424,6 +429,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Collect AlfWorld trajectories')
     parser.add_argument('--steps', type=int, default=10, help='Max steps per episode')
     parser.add_argument('--batch', type=int, default=1, help='Batch size')
+    parser.add_argument('--num_tasks', type=int, default=1, help='Number of tasks to run')
     parser.add_argument('--no-save', action='store_true', help='Disable trajectory saving')
     
     args = parser.parse_args()
@@ -435,6 +441,12 @@ if __name__ == "__main__":
         save_trajectories=not args.no_save
     )
     
-    # Run
-    success = run_experiment(exp_config)
-    sys.exit(0 if success else 1)
+    # Run multiple tasks if requested
+    successes = 0
+    for task_idx in range(args.num_tasks):
+        logger.info(f"\n=== Running task {task_idx + 1}/{args.num_tasks} ===")
+        if run_experiment(exp_config):
+            successes += 1
+    
+    logger.info(f"\n=== Completed {successes}/{args.num_tasks} tasks successfully ===")
+    sys.exit(0 if successes == args.num_tasks else 1)

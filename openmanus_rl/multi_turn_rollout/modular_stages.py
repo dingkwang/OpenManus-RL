@@ -113,12 +113,23 @@ class ActionModule:
                 }
         
         # Regular environment action
+        # Extract the actual action from "action_choice: xxx" format
+        env_action = action_content
+        if 'action_choice:' in action_content:
+            # Extract the part after "action_choice:"
+            parts = action_content.split('action_choice:', 1)
+            if len(parts) > 1:
+                env_action = parts[1].strip()
+                # Remove any action_parameters line
+                if '\n' in env_action:
+                    env_action = env_action.split('\n')[0].strip()
+        
         return {
             'action': action_content,
             'tool': None,
             'result': None,
             'augmented_text': text,
-            'for_env': action_content
+            'for_env': env_action
         }
 
 
