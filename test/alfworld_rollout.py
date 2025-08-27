@@ -59,6 +59,7 @@ class TrajectoryStep:
         self.parsed_action = None
         self.reward = 0.0
         self.done = False
+        self.won = False
         self.metadata = {}
     
     def to_dict(self) -> Dict[str, Any]:
@@ -183,7 +184,7 @@ class LLMAgent:
                     {"role": "system", "content": "You are an expert AI agent solving household tasks."},
                     {"role": "user", "content": prompt}
                 ],
-                "max_tokens": 400,
+                "max_tokens": 1000,
                 "temperature": 0.7
             }
             
@@ -192,6 +193,12 @@ class LLMAgent:
             if response.status_code == 200:
                 content = response.json()['choices'][0]['message']['content']
                 logger.debug(f"LLM response received: {len(content)} chars")
+                
+                # Check if response was truncated (missing action tags)
+                if '<think>' in content and not ('</action>' in content or '</reflect' in content.lower()):
+                    logger.warning(f"Response appears truncated, missing action tags")
+                    # Could implement retry with simpler prompt here
+                
                 return content
             else:
                 logger.error(f"API error {response.status_code}: {response.text[:200]}")
@@ -237,7 +244,28 @@ class LLMAgent:
             # Return first line if no special format
             return action_text.split('\n')[0].strip()
         
-        # Fallback to simple extraction
+        # Smarter fallback: try to extract meaningful action from response
+        response_lower = response.lower()
+        
+        # Look for common action patterns in the thinking
+        if 'go to cabinet' in response_lower:
+            # Extract cabinet number
+            import re
+            match = re.search(r'go to cabinet (\d+)', response_lower)
+            if match:
+                return f"go to cabinet {match.group(1)}"
+        
+        if 'open cabinet' in response_lower:
+            match = re.search(r'open cabinet (\d+)', response_lower)
+            if match:
+                return f"open cabinet {match.group(1)}"
+                
+        if 'go to drawer' in response_lower:
+            match = re.search(r'go to drawer (\d+)', response_lower)
+            if match:
+                return f"go to drawer {match.group(1)}"
+        
+        # Default fallback
         return "look"
 
 
@@ -299,16 +327,29 @@ class TrajectoryCollector:
             step.done = bool(dones[0])
             # Convert any numpy arrays in info to lists for JSON serialization
             info_dict = infos[0] if infos else {}
+            
+            # Extract admissible actions from info if not already set
+            if not step.admissible_actions and 'admissible_commands' in info_dict:
+                step.admissible_actions = info_dict['admissible_commands']
+            
+            # Store metadata excluding admissible_commands (to avoid duplication)
             step.metadata = {
                 'info': {k: v.tolist() if hasattr(v, 'tolist') else v 
-                        for k, v in info_dict.items()}
+                        for k, v in info_dict.items() 
+                        if k != 'admissible_commands'}
             }
+            
+            # Store won status for success determination
+            step.won = info_dict.get('won', False)
             
             trajectory.append(step)
             
-            # Check termination
+            # Check termination - success or environment done
             if step.done:
                 logger.info(f"Episode completed at step {step_num + 1}")
+                break
+            elif step.won:
+                logger.info(f"Task completed successfully at step {step_num + 1}!")
                 break
             
             obs = next_obs
@@ -317,7 +358,7 @@ class TrajectoryCollector:
             'task': task_description,
             'steps': [s.to_dict() for s in trajectory],
             'total_reward': sum(s.reward for s in trajectory),
-            'success': trajectory[-1].done if trajectory else False,
+            'success': any(s.won for s in trajectory),  # True if any step shows won=True
             'length': len(trajectory)
         }
     
