@@ -57,7 +57,6 @@ class TrajectoryStep:
         self.llm_prompt = None
         self.llm_response = None
         self.parsed_action = None
-        self.observation_after = None
         self.reward = 0.0
         self.done = False
         self.metadata = {}
@@ -75,7 +74,6 @@ class TrajectoryStep:
                 'action': self.parsed_action
             },
             'transition': {
-                'next_observation': self.observation_after,
                 'reward': self.reward,
                 'done': self.done
             },
@@ -297,7 +295,6 @@ class TrajectoryCollector:
             # Execute in environment
             next_obs, rewards, dones, infos = env.step([step.parsed_action])
             
-            step.observation_after = next_obs['text'][0]
             step.reward = float(rewards[0])
             step.done = bool(dones[0])
             # Convert any numpy arrays in info to lists for JSON serialization
