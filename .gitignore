@@ -34,3 +34,5 @@ verl_checkpoints/
 verl.egg-info/
 
 test_memory.md
+
+trajectories/traj_*.json
