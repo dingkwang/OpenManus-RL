@@ -9,7 +9,7 @@ We are committed to regularly updating our exploration directions and results in
 
 We warmly welcome contributions from the broader community—join us in pushing the boundaries of agent reasoning and tool integration!
 
-Code and dataset coming soon! Stay tuned!
+Code and dataset are now available! The `verl` submodule has been integrated for enhanced RL training capabilities.
 
 <div style="display: flex; justify-content: center;">
   <div style="width: 100; transform: scale(1.0);">
@@ -146,10 +146,17 @@ Agents are equipped with action-space awareness, employing systematic exploratio
 ### Integration with RL Tuning Frameworks
 We integrate insights and methodologies from leading RL tuning frameworks, including:
 
-- **Verl**
+- **Verl** - **Integrated as Git Submodule** - Our primary RL framework, providing advanced training capabilities for agent optimization
 - **TinyZero**
 - **OpenR1**
 - **Trlx**
+
+### Verl Integration
+The `verl` submodule is fully integrated into OpenManus-RL, providing:
+- **Advanced RL Algorithms** - PPO, DPO, and custom reward modeling
+- **Efficient Training** - Optimized for large language model fine-tuning
+- **Flexible Configuration** - Easy customization of training parameters
+- **Production Ready** - Battle-tested framework from Bytedance
 
 Through these frameworks, agents can effectively balance exploration and exploitation, optimize reasoning processes, and adapt dynamically to novel environments.
 
@@ -208,6 +215,18 @@ We are still laboriously developing this part, welcome feedback.
 
 ## Installation
 
+### Prerequisites
+This project uses git submodules. After cloning the repository, make sure to initialize and update the submodules:
+
+```bash
+# Clone the repository with submodules
+git clone --recursive https://github.com/OpenManus/OpenManus-RL.git
+
+# Or if already cloned, initialize and update submodules
+git submodule update --init --recursive
+```
+
+### Environment Setup
 First, create a conda environment and activate it:
 
 ```bash
@@ -277,17 +296,17 @@ webshop --port 36001
 
 Note: The WebShop environment requires specific versions of Python, PyTorch, Faiss, and Java. The setup script will handle these dependencies automatically.
 
-## Quick start
+## Quick Start
 
-Train a reasoning + search LLM on NQ dataset with e5 as the retriever and wikipedia as the corpus.
+### 1. Environment Setup
+Make sure you have the required environments set up (see Environment Setup section above).
 
-(1) Download the indexing and corpus.
+### 2. Data Preparation
+Download the OpenManus-RL dataset from [Hugging Face](https://huggingface.co/datasets/CharlieDreemur/OpenManus-RL).
 
-From https://huggingface.co/datasets/CharlieDreemur/OpenManus-RL
+### 3. Training Examples
 
-(3) Launch a local AgentGym server.
-
-(4) Run RL training (PPO).
+#### ALFWorld RL Training (PPO)
 ```bash
 conda activate openmanus-rl
 bash scripts/ppo_train/train_alfworld.sh
@@ -378,6 +397,19 @@ Please cite the following paper if you find OpenManus helpful!
   </picture>
 </a>
 </p>
+
+## Project Structure
+
+```
+OpenManus-RL/
+├── verl/                    # Verl RL framework submodule
+├── openmanus_rl/           # Main OpenManus-RL library
+├── scripts/                # Training and evaluation scripts
+├── configs/                # Configuration files
+├── environments/           # Agent environment implementations
+├── docs/                   # Documentation
+└── examples/               # Usage examples
+```
 
 ## Documentation
 - [Development Guide (English)](docs/DEVELOPMENT_GUIDE_EN.md)
