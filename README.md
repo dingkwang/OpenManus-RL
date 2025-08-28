@@ -267,6 +267,7 @@ conda activate agentenv_webshop
 # Setup the environment
 bash ./setup.sh -d all
 ```
+
 ### 2. ALFWorld
 
 ```bash
@@ -281,20 +282,6 @@ Download PDDL & Game files and pre-trained MskRCNN detector (will be stored in `
 alfworld-download -f
 ```
 Use `--extra` to download pre-trained checkpoints and seq2seq data.
-
-### Launching the WebShop Server
-
-After setting up the environment, you can launch the WebShop server:
-
-```bash
-# Make sure the webshop conda environment is activated
-conda activate webshop
-
-# Launch the server (default port: 36001)
-webshop --port 36001
-```
-
-Note: The WebShop environment requires specific versions of Python, PyTorch, Faiss, and Java. The setup script will handle these dependencies automatically.
 
 ## Quick Start
 
