@@ -326,6 +326,44 @@ def make_envs(config):
         import time
         time.sleep((config.data.train_batch_size * group_n + config.data.val_batch_size) * 0.1) # wait for the envs to be ready
         return envs, val_envs
+    elif "tool_use" in config.env.env_name.lower():
+        from openmanus_rl.environments.env_package.tool_use.envs import build_tool_use_envs
+        from openmanus_rl.environments.env_package.tool_use.projection import tool_use_projection
+        from openmanus_rl.environments.env_package.tool_use.manager import ToolUseEnvironmentManager
+        
+        # Load task data
+        import json
+        data_path = getattr(config.env, 'data_path', 'ref_code/data/data.json')
+        with open(data_path, 'r') as f:
+            tasks_data = json.load(f)
+        
+        # Get available tools from config
+        available_tools = getattr(config.env, 'available_tools', [
+            'google_search', 'wikipedia_knowledge_searcher', 'arxiv_paper_searcher'
+        ])
+        
+        # Build environments
+        _envs = build_tool_use_envs(
+            tasks_data=tasks_data,
+            available_tools=available_tools,
+            seed=config.env.seed,
+            env_num=config.data.train_batch_size,
+            group_n=group_n,
+            is_train=True
+        )
+        _val_envs = build_tool_use_envs(
+            tasks_data=tasks_data,
+            available_tools=available_tools,
+            seed=config.env.seed + 1000,
+            env_num=config.data.val_batch_size,
+            group_n=1,
+            is_train=False
+        )
+        
+        projection_f = partial(tool_use_projection)
+        envs = ToolUseEnvironmentManager(_envs, projection_f, config)
+        val_envs = ToolUseEnvironmentManager(_val_envs, projection_f, config)
+        return envs, val_envs
     else:
         print("Environment not supported")
         exit(1)
