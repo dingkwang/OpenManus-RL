@@ -6,6 +6,7 @@ import json
 import re
 from typing import List, Dict, Any
 from collections import defaultdict
+import numpy as np
 
 from openmanus_rl.environments.base import EnvironmentManagerBase, to_numpy
 from openmanus_rl.memory import SimpleMemory

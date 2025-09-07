@@ -16,12 +16,12 @@ from openai import OpenAI
 from together import Together
 
 
-def build_env(env_name, tasks_data, available_tools, env_num=1, seed=1, history_length=2):
+def build_env(env_name, tasks_data, available_tools, env_num=1, seed=1, history_length=2, max_steps=30):
     group_n = 1
     if env_name == "gaia":
         # Build GAIA/Tool Use environments
-        from openmanus_rl.environments.env_package.tool_use import tool_use_projection
-        from openmanus_rl.environments.env_package.tool_use import build_tool_use_envs
+        from openmanus_rl.environments.env_package.tool_use.projection import tool_use_projection
+        from openmanus_rl.environments.env_package.tool_use.envs import build_tool_use_envs
         from openmanus_rl.environments.env_package.tool_use.manager import ToolUseEnvironmentManager
         
         envs = build_tool_use_envs(
@@ -38,7 +38,7 @@ def build_env(env_name, tasks_data, available_tools, env_num=1, seed=1, history_
             env=SimpleNamespace(
                 env_name="tool_use",
                 history_length=history_length,
-                max_steps=30  # Default max steps for GAIA tasks
+                max_steps=max_steps  # Controlled by CLI
             )
         )
         env_manager = ToolUseEnvironmentManager(envs, tool_use_projection, cfg)
@@ -235,6 +235,7 @@ if __name__ == "__main__":
             env_num=current_batch_size,
             seed=args.seed + batch_idx,
             history_length=args.history_length,
+            max_steps=args.max_steps,
         )
         
         # Batch-level statistics
@@ -249,6 +250,8 @@ if __name__ == "__main__":
 
                 obs, infos = env_manager.reset()
                 env_dones = [False] * current_batch_size
+                # Persist PIDs from reset infos for later logging (step infos omit pid)
+                pids = [infos[i].get("pid", f"task_{i}") for i in range(len(infos))]
 
                 # per-env chat buffers
                 chats = [[] for _ in range(current_batch_size)]
@@ -313,7 +316,7 @@ if __name__ == "__main__":
                                     "reward": float(rewards[i]) if i < len(rewards) else None,
                                     "done": bool(dones[i]) if i < len(dones) else None,
                                     "won": bool(infos[i].get("won", False)),
-                                    "pid": infos[i].get("pid", "unknown"),
+                                    "pid": pids[i] if i < len(pids) else "unknown",
                                     "is_action_valid": bool(infos[i].get("is_action_valid", False)),
                                 }
                                 dump_fp.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -326,7 +329,7 @@ if __name__ == "__main__":
                             overall_success_this_round[i] = won
 
                             # Track success for this task
-                            pid = infos[i].get("pid", f"task_{i}")
+                            pid = pids[i] if i < len(pids) else f"task_{i}"
                             task_total_cnt[pid] = 1
                             if won:
                                 task_success_cnt[pid] = 1
@@ -334,7 +337,7 @@ if __name__ == "__main__":
                             # If this env just finished, dump chat history if requested
                             if chat_base_dir and not saved_flags[i]:
                                 try:
-                                    pid = infos[i].get("pid", f"task_{i}")
+                                    pid = pids[i] if i < len(pids) else f"task_{i}"
                                     task_dir = os.path.join(chat_base_dir, _sanitize(pid))
                                     os.makedirs(task_dir, exist_ok=True)
                                     unique_id = f"b{batch_idx:03d}_t{test_idx:02d}_e{i:02d}"
@@ -365,7 +368,7 @@ if __name__ == "__main__":
                     for i in range(current_batch_size):
                         if not saved_flags[i]:
                             try:
-                                pid = last_infos[i].get("pid", f"task_{i}") if isinstance(last_infos, list) and i < len(last_infos) else f"task_{i}"
+                                pid = pids[i] if i < len(pids) else f"task_{i}"
                                 task_dir = os.path.join(chat_base_dir, _sanitize(pid))
                                 os.makedirs(task_dir, exist_ok=True)
                                 unique_id = f"b{batch_idx:03d}_t{test_idx:02d}_e{i:02d}"
@@ -394,7 +397,13 @@ if __name__ == "__main__":
 
                 logging.info(f"Batch {batch_idx + 1} Test {test_idx} overall success: {round_success_rate:.4f}")
 
-                # Log individual task results
+                # Aggregate per-task results for this round
+                for pid, total in task_total_cnt.items():
+                    if total > 0:
+                        rate = task_success_cnt.get(pid, 0) / total
+                        batch_task_success_history[pid].append(rate)
+
+                # Log individual task results (top few)
                 success_pids = [pid for pid, cnt in task_success_cnt.items() if cnt > 0]
                 if success_pids:
                     logging.info(f"    Successful tasks: {', '.join(success_pids[:5])}{'...' if len(success_pids) > 5 else ''}")
@@ -406,8 +415,8 @@ if __name__ == "__main__":
         finally:
             # Accumulate batch results to global results
             all_overall_success_rates.extend(batch_overall_success_rates)
-            for task, rate in task_success_cnt.items():
-                all_task_success_history[task].append(rate)
+            for task, rates in batch_task_success_history.items():
+                all_task_success_history[task].extend(rates)
 
             # Update global env counter
             global_env_counter += current_batch_size
