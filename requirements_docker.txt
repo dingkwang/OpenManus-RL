@@ -1,0 +1,14 @@
+# Core dependencies for OpenManus-RL in AMD vllm Docker
+gymnasium==0.29.1
+stable-baselines3==2.6.0
+alfworld
+pyyaml
+openai
+together
+ray
+numpy
+pandas
+tqdm
+transformers
+torch
+vllm
