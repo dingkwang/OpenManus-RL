@@ -1,4 +1,9 @@
 import os
+try:
+    from dotenv import load_dotenv  # type: ignore
+    load_dotenv()
+except Exception:
+    pass
 import time
 import json
 import logging
