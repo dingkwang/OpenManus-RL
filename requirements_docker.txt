@@ -12,3 +12,6 @@ tqdm
 transformers
 torch
 vllm
+requests
+python-dotenv
+wikipedia
