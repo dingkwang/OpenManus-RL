@@ -174,8 +174,9 @@ class EnvironmentFactory:
                    env_num: int = 1, seed: int = 1, history_length: int = 2,
                    max_steps: int = 30, **kwargs):
         """Build GAIA/Tool Use environment"""
-        from openmanus_rl.environments.env_package.tool_use import tool_use_projection
-        from openmanus_rl.environments.env_package.tool_use import build_tool_use_envs
+
+        from openmanus_rl.environments.env_package.tool_use.projection import tool_use_projection
+        from openmanus_rl.environments.env_package.tool_use.envs import build_tool_use_envs
         from openmanus_rl.environments.env_package.tool_use.manager import ToolUseEnvironmentManager
         
         envs = build_tool_use_envs(
@@ -325,6 +326,14 @@ def main():
     parser.add_argument("--debug", action="store_true",
                        help="Enable debug logging")
     
+    # Summary-related options  
+    parser.add_argument("--use_summary", action="store_true",
+                       help="Enable memory summarization instead of sliding window")
+    parser.add_argument("--summary_api_key", default=None,
+                       help="API key for summary LLM (defaults to environment variables)")
+    parser.add_argument("--summary_endpoint", default=None, 
+                       help="API endpoint for summary LLM (defaults to environment variables)")
+    
     args = parser.parse_args()
     
     # Set default max_steps based on environment
@@ -446,6 +455,10 @@ def main():
                 "env_num": current_batch_size,
                 "seed": args.seed + batch_idx,
                 "history_length": args.history_length,
+                # Summary configuration
+                "use_summary": args.use_summary,
+                "summary_api_key": args.summary_api_key or os.getenv("OAI_KEY") or os.getenv("OPENAI_API_KEY"),
+                "summary_endpoint": args.summary_endpoint or os.getenv("OAI_ENDPOINT") or os.getenv("OPENAI_ENDPOINT"),
             }
             
             if args.env == "gaia":
