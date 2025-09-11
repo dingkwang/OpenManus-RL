@@ -1,13 +1,32 @@
-# --------------------- ALFWorld --------------------- #
+# # --------------------- ALFWorld --------------------- #
+# ALFWORLD_TEMPLATE_NO_HIS = """
+# You are an expert agent operating in the ALFRED Embodied Environment.
+# Your current observation is: {current_observation}
+# Your admissible actions of the current situation are: [{admissible_actions}].
+
+# Now it's your turn to take an action.
+# You should first reason step-by-step about the current situation. This reasoning process MUST be enclosed within <think> </think> tags. 
+# Once you've finished your reasoning, you should choose an admissible action for current step and present it within <action> </action> tags.
+# """
+
 ALFWORLD_TEMPLATE_NO_HIS = """
 You are an expert agent operating in the ALFRED Embodied Environment.
+Your task is: {task_description}
 Your current observation is: {current_observation}
 Your admissible actions of the current situation are: [{admissible_actions}].
 
-Now it's your turn to take an action.
-You should first reason step-by-step about the current situation. This reasoning process MUST be enclosed within <think> </think> tags. 
-Once you've finished your reasoning, you should choose an admissible action for current step and present it within <action> </action> tags.
+Please begin by analyzing the situation and planning your approach:
+
+<plan>
+Analyze the current situation and devise a plan to accomplish the task:
+What are the key steps needed to complete this task?
+How to advance our plan toward completing the task in immediate next step?
+Based on the current observation, what should be our immediate next step?
+</plan>
+
+Finally, choose ONE admissible action for the current step and present it within <action> </action> tags.
 """
+
 
 ALFWORLD_TEMPLATE = """
 You are an expert agent operating in the ALFRED Embodied Environment. Your task is to: {task_description}
@@ -16,41 +35,16 @@ You are now at step {current_step} and your current observation is: {current_obs
 Your admissible actions of the current situation are: [{admissible_actions}].
 
 Now it's your turn to take an action.
-You should first reason step-by-step about the current situation. This reasoning process MUST be enclosed within <think> </think> tags. 
-Once you've finished your reasoning, you should choose an admissible action for current step and present it within <action> </action> tags.
-"""
 
-ALFWORLD_OPENMANUS_INITIAL_TEMPLATE = """
-You are an expert agent operating in the ALFRED Embodied Environment. Your task is to: {task_description}
+You should first recall relevant past experiences and reason from our conversation history, then MUST summarize within <memory_recall> </memory_recall> tags like this:
 
-Current observation: {current_observation}
-Available actions: [{admissible_actions}]
+<memory_analysis>
+[Recall relevant past experiences and reason from our conversation history]
+- Please summarize the most relavent memory for this step.
+- Please explain why this memory is helpful for the next reflection and planning.
+</memory_analysis>
 
-Please begin by analyzing the situation and planning your approach:
-
-<think>
-Analyze the current situation and devise a plan to accomplish the task: {task_description}
-What are the key steps needed to complete this task?
-Based on the current observation, what should be our immediate next step?
-How does this action advance our plan toward completing the task?
-</think>
-
-Now, present your chosen action:
-
-<action>
-action_choice: [selected admissible action from the list]
-action_parameters: {{relevant details about the action if applicable}}
-</action>
-
-From now on, I will provide you with observations after each action, and you should respond with memory recall, reflection, thinking, and your next action in this format:
-
-<memory_recall>
-[Recall relevant past experiences and reasoning from our conversation history]
-- What similar situations have I encountered?
-- What strategies worked or failed before?
-- What objects or locations have I discovered?
-- What was my previous reasoning and plans?
-</memory_recall>
+After that, you should reflect on the last action and its outcome, then MUST summarize within <reflection> </reflection> tags like this:
 
 <reflection>
 [Reflect on the last action and its outcome]
@@ -60,18 +54,15 @@ From now on, I will provide you with observations after each action, and you sho
 - Am I making progress toward the task goal?
 </reflection>
 
-<think>
+After that, you should plan the next step based on memory and reflection, then MUST summarize within <think> </think> tags like this:
+
+<plan>
 [Plan the next step based on memory and reflection]
 - Given what I've learned, what should I do next?
+- Please explain why this plan is helpful for the next action?
 - How does this action fit into my overall strategy?
 - What do I expect this action to achieve?
-</think>
+</plan>
 
-<action>
-action_choice: [selected admissible action from the list]
-action_parameters: {{relevant details about the action if applicable}}
-</action>
+Finally, choose ONE admissible action for the current step and present it within <action> </action> tags.
 """
-
-# Keep the old template name for backward compatibility
-ALFWORLD_OPENMANUS_TEMPLATE = ALFWORLD_OPENMANUS_INITIAL_TEMPLATE

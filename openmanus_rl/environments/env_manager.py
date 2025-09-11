@@ -6,7 +6,7 @@ from functools import partial
 import os
 from openmanus_rl.environments.prompts import *
 from openmanus_rl.environments.base import EnvironmentManagerBase, to_numpy
-from openmanus_rl.memory import SimpleMemory
+from openmanus_rl.memory import SimpleMemory, SummarizedMemory
 
 def parse_gamefile(infos):
     gamefile = []
@@ -28,7 +28,11 @@ def set_gamefile(infos, gamefile):
 
 class AlfWorldEnvironmentManager(EnvironmentManagerBase):
     def __init__(self, envs, projection_f, config):
-        self.memory = SimpleMemory()
+        # Choose memory type based on config
+        if hasattr(config.env, 'use_summary') and config.env.use_summary:
+            self.memory = SummarizedMemory()
+        else:
+            self.memory = SimpleMemory()
         super().__init__(envs, projection_f, config)
     
     def reset(self):
@@ -79,10 +83,24 @@ class AlfWorldEnvironmentManager(EnvironmentManagerBase):
         """
         postprocess_text_obs = []
         if not init and self.config.env.history_length > 0:
-            memory_contexts, valid_lens = self.memory.fetch(
+            # Check if using summary mode
+            use_summary = hasattr(self.config.env, 'use_summary') and self.config.env.use_summary
+            
+            if use_summary:
+                memory_contexts, valid_lens = self.memory.fetch(
                     self.config.env.history_length,
                     obs_key="text_obs",
-                    action_key="action")
+                    action_key="action",
+                    use_summary=True,
+                    summary_api_key=getattr(self.config.env, 'summary_api_key', None),
+                    summary_endpoint=getattr(self.config.env, 'summary_endpoint', None)
+                )
+            else:
+                memory_contexts, valid_lens = self.memory.fetch(
+                    self.config.env.history_length,
+                    obs_key="text_obs",
+                    action_key="action"
+                )
             
         for i in range(len(text_obs)):
             # exclude 'help' in admissible_actions[i]
@@ -140,7 +158,11 @@ class AlfWorldEnvironmentManager(EnvironmentManagerBase):
 
 class WebshopEnvironmentManager(EnvironmentManagerBase):
     def __init__(self, envs, projection_f, config):
-        self.memory = SimpleMemory()
+        # Choose memory type based on config
+        if hasattr(config.env, 'use_summary') and config.env.use_summary:
+            self.memory = SummarizedMemory()
+        else:
+            self.memory = SimpleMemory()
         super().__init__(envs, projection_f, config)
     
     def reset(self) -> Dict[str, Any]:
@@ -223,7 +245,19 @@ class WebshopEnvironmentManager(EnvironmentManagerBase):
         """
         postprocess_text_obs = []
         if not init and self.config.env.history_length > 0:
-            memory_contexts, valid_lens = self.memory.fetch(
+            # Check if using summary mode
+            use_summary = hasattr(self.config.env, 'use_summary') and self.config.env.use_summary
+            if use_summary:
+                memory_contexts, valid_lens = self.memory.fetch(
+                    self.config.env.history_length,
+                    obs_key="text_obs",
+                    action_key="action",
+                    use_summary=True,
+                    summary_api_key=getattr(self.config.env, 'summary_api_key', None),
+                    summary_endpoint=getattr(self.config.env, 'summary_endpoint', None),
+                )
+            else:
+                memory_contexts, valid_lens = self.memory.fetch(
                     self.config.env.history_length,
                     obs_key="text_obs",
                     action_key="action")
@@ -325,6 +359,44 @@ def make_envs(config):
         val_envs = WebshopEnvironmentManager(_val_envs, projection_f, config)
         import time
         time.sleep((config.data.train_batch_size * group_n + config.data.val_batch_size) * 0.1) # wait for the envs to be ready
+        return envs, val_envs
+    elif "tool_use" in config.env.env_name.lower():
+        from openmanus_rl.environments.env_package.tool_use.envs import build_tool_use_envs
+        from openmanus_rl.environments.env_package.tool_use.projection import tool_use_projection
+        from openmanus_rl.environments.env_package.tool_use.manager import ToolUseEnvironmentManager
+        
+        # Load task data
+        import json
+        data_path = getattr(config.env, 'data_path', 'data/gaia/val.json')
+        with open(data_path, 'r') as f:
+            tasks_data = json.load(f)
+        
+        # Get available tools from config
+        available_tools = getattr(config.env, 'available_tools', [
+            'google_search', 'wikipedia_knowledge_searcher', 'arxiv_paper_searcher'
+        ])
+        
+        # Build environments
+        _envs = build_tool_use_envs(
+            tasks_data=tasks_data,
+            available_tools=available_tools,
+            seed=config.env.seed,
+            env_num=config.data.train_batch_size,
+            group_n=group_n,
+            is_train=True
+        )
+        _val_envs = build_tool_use_envs(
+            tasks_data=tasks_data,
+            available_tools=available_tools,
+            seed=config.env.seed + 1000,
+            env_num=config.data.val_batch_size,
+            group_n=1,
+            is_train=False
+        )
+        
+        projection_f = partial(tool_use_projection)
+        envs = ToolUseEnvironmentManager(_envs, projection_f, config)
+        val_envs = ToolUseEnvironmentManager(_val_envs, projection_f, config)
         return envs, val_envs
     else:
         print("Environment not supported")
