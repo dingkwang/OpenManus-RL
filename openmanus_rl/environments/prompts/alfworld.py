@@ -5,7 +5,7 @@
 # Your admissible actions of the current situation are: [{admissible_actions}].
 
 # Now it's your turn to take an action.
-# You should first reason step-by-step about the current situation. This reasoning process MUST be enclosed within <think> </think> tags. 
+# You should first reason step-by-step about the current situation. This reasoning process MUST be enclosed within <plan> </plan> tags. 
 # Once you've finished your reasoning, you should choose an admissible action for current step and present it within <action> </action> tags.
 # """
 
@@ -54,7 +54,7 @@ After that, you should reflect on the last action and its outcome, then MUST sum
 - Am I making progress toward the task goal?
 </reflection>
 
-After that, you should plan the next step based on memory and reflection, then MUST summarize within <think> </think> tags like this:
+After that, you should plan the next step based on memory and reflection, then MUST summarize within <plan> </plan> tags like this:
 
 <plan>
 [Plan the next step based on memory and reflection]

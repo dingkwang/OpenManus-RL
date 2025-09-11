@@ -107,9 +107,11 @@ class AlfWorldEnvironmentManager(EnvironmentManagerBase):
             reformatted_admissible_actions = "\n ".join(f"'{s}'" for s in admissible_actions[i] if s != 'help')
 
             if init or self.config.env.history_length <= 0:
+                # Include task_description to satisfy ALFWORLD_TEMPLATE_NO_HIS placeholders.
                 obs = ALFWORLD_TEMPLATE_NO_HIS.format(
+                    task_description=self.tasks[i],
                     current_observation=text_obs[i],
-                    admissible_actions=reformatted_admissible_actions
+                    admissible_actions=reformatted_admissible_actions,
                 )
             else:
                 obs = ALFWORLD_TEMPLATE.format(
