@@ -29,10 +29,10 @@ except Exception:
     pass
 
 
-class UnifiedAgent:
-    """Unified agent that can work with all environments"""
+class OpenManusAgent:
+    """OpenManus agent that can work with all environments"""
     
-    def __init__(self, model_name: str = "gpt-4o", temperature: float = 0.4, 
+    def __init__(self, model_name: str = "gpt-4o", temperature: float = 0.7, 
                  base_url: str | None = None, env_type: str = "alfworld"):
         self.model_name = model_name
         self.temperature = temperature
@@ -284,14 +284,14 @@ def main():
     parser.add_argument("--test_times", type=int, default=1,
                        help="Number of test runs per batch")
     parser.add_argument("--max_steps", type=int, default=None,
-                       help="Maximum steps per episode (default: 50 for alfworld, 30 for gaia/webshop)")
+                       help="Maximum steps per episode (default: 30)")
     parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument("--history_length", type=int, default=2)
+    parser.add_argument("--history_length", type=int, default=3)
     
     # Model parameters
-    parser.add_argument("--model", default="gpt-4o-mini",
+    parser.add_argument("--model", default="gpt-4o",
                        help="Model name (OpenAI: gpt-4o, gpt-4o-mini; Together: Qwen/Qwen2.5-7B-Instruct-Turbo, etc.)")
-    parser.add_argument("--temperature", type=float, default=0.4)
+    parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--base_url", default=None,
                        help="OpenAI-compatible base URL (e.g., vLLM http://127.0.0.1:8000/v1)")
     
@@ -304,8 +304,14 @@ def main():
     # Output parameters
     parser.add_argument("--dump_path", default=None,
                        help="If set, write JSONL trajectory to this file")
-    parser.add_argument("--chat_root", default=None,
-                       help="If set, save per-episode chat histories under this root")
+    parser.add_argument(
+        "--chat_root",
+        default=os.getcwd(),
+        help=(
+            "Root directory to save per-episode chat histories. "
+            "Defaults to the current working directory."
+        ),
+    )
     
     # Environment-specific parameters
     parser.add_argument("--alf_env_type", default="alfworld/AlfredTWEnv",
@@ -339,7 +345,7 @@ def main():
     # Set default max_steps based on environment
     if args.max_steps is None:
         args.max_steps = {
-            "alfworld": 50,
+            "alfworld": 30,
             "gaia": 30,
             "webshop": 30
         }[args.env]
@@ -431,7 +437,7 @@ def main():
         sys.exit(0)
     
     # Initialize agent (defer until after potential dry-run exit to avoid requiring API keys)
-    agent = UnifiedAgent(
+    agent = OpenManusAgent(
         model_name=args.model,
         temperature=args.temperature,
         base_url=args.base_url,
@@ -617,6 +623,12 @@ def main():
                                             "environment": args.env,
                                         }
                                         
+                                        # Add environment-specific task identifiers
+                                        if args.env == "alfworld":
+                                            meta["gamefile"] = infos[i].get("extra.gamefile", "")
+                                        elif args.env == "gaia":
+                                            meta["pid"] = infos[i].get("pid", "unknown")
+                                        
                                         with open(out_path, "w", encoding="utf-8") as f:
                                             json.dump({"messages": chats[i], "metadata": meta}, f, ensure_ascii=False, indent=2)
                                         saved_flags[i] = True
@@ -646,6 +658,13 @@ def main():
                                         "timestamp": run_ts,
                                         "environment": args.env,
                                     }
+                                    
+                                    # Add environment-specific task identifiers for unfinished tasks
+                                    if last_infos and i < len(last_infos):
+                                        if args.env == "alfworld":
+                                            meta["gamefile"] = last_infos[i].get("extra.gamefile", "")
+                                        elif args.env == "gaia":
+                                            meta["pid"] = last_infos[i].get("pid", "unknown")
                                     
                                     with open(out_path, "w", encoding="utf-8") as f:
                                         json.dump({"messages": chats[i], "metadata": meta}, f, ensure_ascii=False, indent=2)
@@ -699,6 +718,12 @@ def main():
     logging.info("=============== Final Summary ===============")
     logging.info(f"Environment: {args.env}")
     logging.info(f"Total batches: {num_batches} | Batch size: {args.batch_size} | Total envs processed: {global_env_counter}")
+    
+    # Echo save locations to make it easy to find outputs.
+    if args.dump_path:
+        logging.info(f"Trajectory file: {args.dump_path}")
+    if chat_base_dir:
+        logging.info(f"Chats directory: {chat_base_dir}")
     
     if all_overall_success_rates:
         logging.info(
