@@ -25,12 +25,23 @@ def simple_summarize(history_steps: List[str], api_key: str = None, endpoint: st
     # Join all history into one text
     full_history = "\n".join(history_steps)
     
-    prompt = f"""
+    prompt = f"""Compress this ALFRED history into a current state snapshot.
+
+Output EXACTLY these labeled lines (one line each, ASCII only):
+Task:
+Location: <last known location or 'unknown'>
+Inventory: <items held or 'none'>
+Discovered: <key objects/containers with states; aggregate sets; limit to top 5>
+KeyEvents: <1-2 important actions and outcomes>
+
+Rules:
+- Facts only; no suggestions or analysis.
+- Do not copy long quotes; use key nouns.
+- If unknown, write 'unknown'.
+- Total length <= 600 characters.
 
 History to summarize:
-{full_history}
-
-Keep summary under 200 words, focus on facts not reasoning."""
+{full_history}"""
 
     try:
         headers = {
