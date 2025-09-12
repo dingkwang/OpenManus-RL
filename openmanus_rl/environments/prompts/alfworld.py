@@ -36,7 +36,7 @@ Your admissible actions of the current situation are: [{admissible_actions}].
 
 Now it's your turn to take an action.
 
-You should first recall relevant past experiences and reason from our conversation history, then MUST summarize within <memory_recall> </memory_recall> tags like this:
+You should first recall relevant past experiences and reason from our conversation history, then MUST summarize within <memory_analysis> </memory_analysis> tags like this:
 
 <memory_analysis>
 [Recall relevant past experiences and reason from our conversation history]
