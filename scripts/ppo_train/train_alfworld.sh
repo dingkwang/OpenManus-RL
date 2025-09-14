@@ -14,8 +14,8 @@ val_data_size=128
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=gae \
-    data.train_files=/data1/user/muxin/verl-agent/text/train.parquet \ # TODO: change to the correct path
-    data.val_files=/data1/user/muxin/verl-agent/text/test.parquet \ # TODO: change to the correct path
+    data.train_files=/Users/dingkwang/sci/OpenManus-RL/datasets/data/train-00000-of-00001.parquet \
+    data.val_files=/Users/dingkwang/sci/OpenManus-RL/data/wordle/val.parquet \
     data.train_batch_size=$train_data_size \
     data.val_batch_size=$val_data_size \
     data.max_prompt_length=2048 \

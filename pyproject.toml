@@ -16,11 +16,16 @@ keywords = ["reinforcement-learning", "llm", "agents", "rl"]
 
 # Keep runtime deps light; rely on requirements.txt for full env
 dependencies = [
+    "gymnasium==0.29.1",
+    "huggingface-hub[cli]>=0.34.4",
     "numpy",
     "pandas",
     "pyarrow>=19.0.0",
+    "stable-baselines3==2.6.0",
+    "textworld>=1.6.2",
     "torch>=2.8.0",
     "torchvision>=0.23.0",
+    "verl",
     "wandb>=0.21.4",
 ]
 

@@ -102,6 +102,7 @@ openmanus_rl/environments/env_package/webshop/__init__.py
 openmanus_rl/environments/env_package/webshop/envs.py
 openmanus_rl/environments/env_package/webshop/projection.py
 openmanus_rl/environments/env_package/webshop/webshop/conftest.py
+openmanus_rl/environments/env_package/webshop/webshop/main.py
 openmanus_rl/environments/env_package/webshop/webshop/run_web_agent_text_env.py
 openmanus_rl/environments/env_package/webshop/webshop/baseline_models/agent.py
 openmanus_rl/environments/env_package/webshop/webshop/baseline_models/env.py

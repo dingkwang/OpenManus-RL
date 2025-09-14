@@ -208,11 +208,16 @@ Keywords: reinforcement-learning,llm,agents,rl
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: gymnasium==0.29.1
+Requires-Dist: huggingface-hub[cli]>=0.34.4
 Requires-Dist: numpy
 Requires-Dist: pandas
 Requires-Dist: pyarrow>=19.0.0
+Requires-Dist: stable-baselines3==2.6.0
+Requires-Dist: textworld>=1.6.2
 Requires-Dist: torch>=2.8.0
 Requires-Dist: torchvision>=0.23.0
+Requires-Dist: verl
 Requires-Dist: wandb>=0.21.4
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
@@ -472,7 +477,7 @@ pip3 install torch torchvision
 pip install -e .[vllm]
 
 # flash attention 2
-pip3 install flash-attn --no-build-isolation
+# pip3 install flash-attn --no-build-isolation skip on mac
 pip install wandb
 
 ```
